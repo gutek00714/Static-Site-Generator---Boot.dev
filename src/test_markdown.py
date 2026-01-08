@@ -181,3 +181,7 @@ class TestMarkdown(unittest.TestCase):
             TextNode(" and a ", TextType.TEXT),
             TextNode("link", TextType.LINK, "https://boot.dev"),
         ])
+
+
+if __name__ == "__main__":
+    unittest.main()

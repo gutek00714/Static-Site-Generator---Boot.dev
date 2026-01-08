@@ -24,3 +24,7 @@ class TestSplit_Delimiter(unittest.TestCase):
         node = TextNode("This is **wrong", TextType.TEXT)
         with self.assertRaises(ValueError):
             split_nodes_delimiter([node], "**", TextType.BOLD)
+
+
+if __name__ == "__main__":
+    unittest.main()
