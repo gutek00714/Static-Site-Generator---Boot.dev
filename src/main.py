@@ -23,10 +23,14 @@ def main():
         basepath = "/"
 
 
-    if os.path.exists('./public'):
-        shutil.rmtree('./public')
+    # if os.path.exists('./public'):
+    #     shutil.rmtree('./public')
 
-    copy_static('./static', './public')
+    if os.path.exists("./docs"):
+        shutil.rmtree("./docs")
+
+    # copy_static('./static', './public')
+    copy_static("./static", "./docs")
 
     # generate_page(
     #     from_path="content/index.md",
