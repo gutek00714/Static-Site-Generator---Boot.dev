@@ -6,6 +6,7 @@ from markdown_blocks import markdown_to_blocks, block_to_block_type, BlockType
 import re
 import shutil
 import os
+import sys
 
 def main():
     # node = TextNode(
@@ -15,6 +16,12 @@ def main():
     # )
 
     # print(node)
+
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
+    else:
+        basepath = "/"
+
 
     if os.path.exists('./public'):
         shutil.rmtree('./public')
@@ -30,7 +37,8 @@ def main():
     generate_pages_recursive(
         dir_path_content="./content",
         template_path="./template.html",
-        dest_dir_path="./public"
+        dest_dir_path="./docs",
+        basepath = basepath
     )
 
 
@@ -189,7 +197,7 @@ def extract_title(markdown):
         return title
     
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     with open(from_path, "r") as f:
@@ -206,6 +214,8 @@ def generate_page(from_path, template_path, dest_path):
 
     template_file = template_file.replace("{{ Title }}", title)
     template_file = template_file.replace("{{ Content }}", html)
+    template_file = template_file.replace('href="/', f'href="{basepath}')
+    template_file = template_file.replace('src="/', f'src="{basepath}')
 
     dest_dir = os.path.dirname(dest_path)
     if dest_dir != "":
@@ -215,16 +225,17 @@ def generate_page(from_path, template_path, dest_path):
         f.write(template_file)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     for item in os.listdir(dir_path_content):
         new_path = os.path.join(dir_path_content, item)
-        dest_path = new_path.replace("content", "public")
+        # dest_path = new_path.replace("content", "public")
+        dest_path = new_path.replace("content", "docs")
         if dest_path.endswith(".md"):
             dest_path = dest_path[:-3] + ".html"
         if os.path.isfile(new_path) and new_path.endswith(".md"):
-            generate_page(new_path, template_path, dest_path)
+            generate_page(new_path, template_path, dest_path, basepath)
         elif os.path.isdir(new_path):
-            generate_pages_recursive(new_path, template_path, dest_dir_path)
+            generate_pages_recursive(new_path, template_path, dest_dir_path, basepath)
 
 
 
