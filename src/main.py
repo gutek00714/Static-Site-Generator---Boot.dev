@@ -4,15 +4,22 @@ from markdown import text_to_textnodes
 from textnode import text_node_to_html_node
 from markdown_blocks import markdown_to_blocks, block_to_block_type, BlockType
 import re
+import shutil
+import os
 
 def main():
-    node = TextNode(
-        text="This is some anchor text",
-        text_type=TextType.LINK,
-        url="https://www.boot.dev"
-    )
+    # node = TextNode(
+    #     text="This is some anchor text",
+    #     text_type=TextType.LINK,
+    #     url="https://www.boot.dev"
+    # )
 
-    print(node)
+    # print(node)
+
+    if os.path.exists('./public'):
+        shutil.rmtree('./public')
+
+    copy_static('./static', './public')
 
 
 def markdown_to_html_node(markdown):
@@ -129,6 +136,24 @@ def text_to_children(text):
 
 
 
+def copy_static(src, dest):
+    ### shutil.copytree version (not in assignment)
+    # if os.path.exists('./public'):
+    #     shutil.rmtree('./public')
+    # shutil.copytree('./static', './public', dirs_exist_ok=True)
+
+    if not os.path.exists(dest):
+        os.mkdir(dest)
+
+    for item in os.listdir(src):
+        src_path = os.path.join(src, item)
+        dest_path = os.path.join(dest, item)
+
+        if os.path.isfile(src_path):
+            shutil.copy(src_path, dest_path)
+        else:
+            copy_static(src_path, dest_path)
+    
 
 
 
