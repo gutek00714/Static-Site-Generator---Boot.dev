@@ -21,6 +21,12 @@ def main():
 
     copy_static('./static', './public')
 
+    generate_page(
+        from_path="content/index.md",
+        template_path="template.html",
+        dest_path="public/index.html"
+    )
+
 
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
@@ -44,7 +50,7 @@ def markdown_to_html_node(markdown):
         elif block_type == BlockType.CODE:
             lines = block.split("\n")
             inner = lines[1:-1]
-            inner = [line.lstrip() for line in inner]
+            # inner = [line.lstrip() for line in inner]
             code_text = "\n".join(inner) + "\n"
             code_text_node = TextNode(code_text, TextType.CODE)
             code_node = text_node_to_html_node(code_text_node)
@@ -66,11 +72,14 @@ def markdown_to_html_node(markdown):
 
         elif block_type == BlockType.QUOTE:
             lines = block.split("\n")
-            first_quote = True
+            quote_children = []
+
+            first_line = True
             for line in lines:
                 line = line.strip()
                 if not line:
                     continue
+
                 if line.startswith("> "):
                     text = line[2:]
                 elif line.startswith(">"):
@@ -78,13 +87,16 @@ def markdown_to_html_node(markdown):
                 else:
                     text = line
 
-                # add newline between blockquotes (but not before the first)
-                if not first_quote:
-                    children.append(LeafNode(None, "\n"))
-                first_quote = False
+                # add newline between lines (except before the first)
+                if not first_line:
+                    quote_children.append(LeafNode(None, "\n"))
+                first_line = False
 
                 inline_children = text_to_children(text)
-                q_node = ParentNode("blockquote", children=inline_children)
+                quote_children.extend(inline_children)
+
+            if quote_children:  # only create if we actually have content
+                q_node = ParentNode("blockquote", children=quote_children)
                 children.append(q_node)
 
         elif block_type == BlockType.UNORDERED_LIST:
@@ -101,8 +113,9 @@ def markdown_to_html_node(markdown):
                 inline_children = text_to_children(item_text)
                 li_node = ParentNode("li", children=inline_children)
                 all.append(li_node)
-            ul_node = ParentNode("ul", children=all)
-            children.append(ul_node)
+            if all:
+                ul_node = ParentNode("ul", children=all)
+                children.append(ul_node)
 
         elif block_type == BlockType.ORDERED_LIST:
             lines = block.split("\n")
@@ -118,8 +131,9 @@ def markdown_to_html_node(markdown):
                 inline_children = text_to_children(item_text)
                 li_node = ParentNode("li", children=inline_children)
                 all.append(li_node)
-            ol_node = ParentNode("ol", children=all)
-            children.append(ol_node)
+            if all:
+                ol_node = ParentNode("ol", children=all)
+                children.append(ol_node)
 
 
     parent = ParentNode("div", children=children)
@@ -155,7 +169,44 @@ def copy_static(src, dest):
             copy_static(src_path, dest_path)
     
 
+def extract_title(markdown):
+    lines = markdown.split("\n")
+    title = None
+    for line in lines:
+        if line.startswith("# "):
+            title = line
+            title = title[2:].strip()
+            break
+    if title is None:
+        raise Exception("No title in markdown")
+    else:
+        return title
+    
 
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+
+    with open(from_path, "r") as f:
+        markdown_file = f.read()
+
+    with open(template_path, "r") as f:
+        template_file = f.read()
+
+    node = markdown_to_html_node(markdown_file)
+    html = node.to_html()
+
+    title = extract_title(markdown_file)
+
+
+    template_file = template_file.replace("{{ Title }}", title)
+    template_file = template_file.replace("{{ Content }}", html)
+
+    dest_dir = os.path.dirname(dest_path)
+    if dest_dir != "":
+        os.makedirs(dest_dir, exist_ok=True)
+
+    with open(dest_path, "w") as f:
+        f.write(template_file)
 
 
 

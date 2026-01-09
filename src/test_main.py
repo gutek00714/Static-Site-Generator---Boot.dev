@@ -1,5 +1,5 @@
 import unittest
-from main import markdown_to_html_node
+from main import markdown_to_html_node, extract_title
 
 class Testmain(unittest.TestCase):
     def test_paragraphs(self):
@@ -42,12 +42,15 @@ class Testmain(unittest.TestCase):
 
     def test_quote(self):
         md = """
-> This is a quote
->This is also a quote
-"""
+    > This is a quote
+    >This is also a quote
+    """
         node = markdown_to_html_node(md)
         html = node.to_html()
-        self.assertEqual(html, "<div><blockquote>This is a quote</blockquote>\n<blockquote>This is also a quote</blockquote></div>")
+        self.assertEqual(
+            html,
+            "<div><blockquote>This is a quote\nThis is also a quote</blockquote></div>",
+        )
 
     def test_unordered_list(self):
         md = """
@@ -75,3 +78,31 @@ class Testmain(unittest.TestCase):
             html,
             "<div><ol><li>First</li><li>Second</li><li>Third</li></ol></div>"
         )
+
+    def test_extract_title(self):
+        md = "# This is a title"
+        node = extract_title(md)
+        self.assertEqual("This is a title", node)
+
+    def test_extract_title_few_lines(self):
+        md = """
+# This is a title
+## some text
+# some text
+"""
+        node =extract_title(md)
+        self.assertEqual("This is a title", node)
+
+    def test_extract_title_wrong_order(self):
+        md = """
+## Some line
+# This is a title
+### some line
+"""
+        node = extract_title(md)
+        self.assertEqual("This is a title", node)
+
+    def test_extract_title_no_heading(self):
+        md = "This is a title"
+        with self.assertRaises(Exception):
+            extract_title(md)
