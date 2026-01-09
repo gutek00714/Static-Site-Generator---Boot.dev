@@ -1,5 +1,5 @@
 import unittest
-from markdown_blocks import markdown_to_blocks
+from markdown_blocks import markdown_to_blocks, block_to_block_type, BlockType
 
 
 class TestMarkdownToHTML(unittest.TestCase):
@@ -45,6 +45,33 @@ This is the same paragraph on a new line
                 "- This is a list\n- with items",
             ],
         )
+
+    def test_heading(self):
+        assert block_to_block_type("# Heading") == BlockType.HEADING
+
+    def test_heading_levels(self):
+        assert block_to_block_type("###### Heading") == BlockType.HEADING
+        assert block_to_block_type("#H") == BlockType.PARAGRAPH
+
+    def test_code_block(self):
+        markdown = "```\ncode here\n```"
+        assert block_to_block_type(markdown) == BlockType.CODE
+
+    def test_quote_block(self):
+        markdown = "> quote line\n> another quote"
+        assert block_to_block_type(markdown) == BlockType.QUOTE
+
+    def test_unordered_list(self):
+        markdown = "- item one\n- item two"
+        assert block_to_block_type(markdown) == BlockType.UNORDERED_LIST
+
+    def test_ordered_list(self):
+        markdown = "1. first\n2. second\n3. third"
+        assert block_to_block_type(markdown) == BlockType.ORDERED_LIST
+
+    def test_paragraph(self):
+        assert block_to_block_type("just normal text") == BlockType.PARAGRAPH
+
 
 
 if __name__ == "__main__":
